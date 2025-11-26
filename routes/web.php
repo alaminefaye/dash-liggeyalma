@@ -94,6 +94,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     // Notifications
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::post('/notifications/{id}/mark-read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
+    Route::post('/notifications/{id}/handle', [NotificationController::class, 'handle'])->name('notifications.handle');
     Route::post('/commandes/{commande}/update-status', [CommandeController::class, 'updateStatus'])->name('commandes.update-status');
     Route::post('/commandes/{commande}/cancel', [CommandeController::class, 'cancel'])->name('commandes.cancel');
     Route::get('/commandes/{commande}/invoice', [CommandeController::class, 'generateInvoice'])->name('commandes.invoice');

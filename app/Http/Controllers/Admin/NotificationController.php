@@ -103,4 +103,32 @@ class NotificationController extends Controller
         return redirect()->back()
             ->with('success', 'Notification marquée comme lue.');
     }
+
+    /**
+     * Traiter une notification directement
+     */
+    public function handle(Request $request, $id)
+    {
+        $type = $request->input('type');
+        $notificationId = $request->input('notification_id');
+
+        // Rediriger vers la page appropriée selon le type
+        switch ($type) {
+            case 'prestataire_attente':
+                return redirect()->route('admin.prestataires.show', $notificationId);
+            
+            case 'retrait_attente':
+                return redirect()->route('admin.retraits.show', $notificationId);
+            
+            case 'contournement':
+                return redirect()->route('admin.contournements.show', $notificationId);
+            
+            case 'solde_negatif':
+                return redirect()->route('admin.prestataires.show', $notificationId);
+            
+            default:
+                return redirect()->back()
+                    ->with('error', 'Type de notification non reconnu.');
+        }
+    }
 }
