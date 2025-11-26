@@ -5,8 +5,9 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CategorieController;
 use App\Http\Controllers\Api\PrestataireController;
 use App\Http\Controllers\Api\CommandeController;
+use App\Http\Controllers\Api\MessageController;
 
-/*
+/*r
 |--------------------------------------------------------------------------
 | API Routes
 |--------------------------------------------------------------------------
@@ -50,6 +51,14 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/', [CommandeController::class, 'store']);
         Route::get('/{id}', [CommandeController::class, 'show']);
         Route::put('/{id}/status', [CommandeController::class, 'updateStatus']);
+    });
+    
+    // Messages routes
+    Route::prefix('messages')->group(function () {
+        Route::get('/conversations', [MessageController::class, 'conversations']);
+        Route::get('/{userId}', [MessageController::class, 'messages']);
+        Route::post('/', [MessageController::class, 'store']);
+        Route::put('/{userId}/read', [MessageController::class, 'markAsRead']);
     });
 });
 
