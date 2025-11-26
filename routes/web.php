@@ -53,6 +53,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/prestataires/{prestataire}/activate', [PrestataireController::class, 'activate'])->name('prestataires.activate');
     Route::post('/prestataires/{prestataire}/block', [PrestataireController::class, 'block'])->name('prestataires.block');
     Route::post('/prestataires/{prestataire}/unblock', [PrestataireController::class, 'unblock'])->name('prestataires.unblock');
+    Route::post('/prestataires/{prestataire}/force-commission-payment', [PrestataireController::class, 'forceCommissionPayment'])->name('prestataires.force-commission-payment');
     
     // Catégories de Services
     Route::resource('categories', CategorieServiceController::class);
