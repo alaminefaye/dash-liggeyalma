@@ -83,7 +83,6 @@ class AuthController extends Controller
             'name' => 'required|string|max:255',
             'identifier' => 'required|string', // email or phone
             'password' => 'required|string|min:6|confirmed',
-            'password_confirmation' => 'required|string|min:6',
             'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
