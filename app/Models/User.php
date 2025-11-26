@@ -11,6 +11,10 @@ class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
+    
+    // Add HasApiTokens trait if Sanctum is installed
+    // Uncomment after running: composer require laravel/sanctum
+    // use Laravel\Sanctum\HasApiTokens;
 
     /**
      * The attributes that are mass assignable.
