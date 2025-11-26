@@ -138,6 +138,7 @@ class PrestataireController extends Controller
             'note_moyenne' => $prestataire->avis()->avg('note') ?? 0,
             'revenus_total' => $prestataire->transactions()->where('type', 'paiement')->sum('montant'),
             'commission_payee' => $prestataire->transactions()->where('type', 'commission')->sum('montant'),
+            'contournements_total' => $prestataire->contournements()->count(),
         ];
 
         return view('admin.prestataires.show', compact('prestataire', 'stats'));
@@ -223,6 +224,24 @@ class PrestataireController extends Controller
     }
 
     /**
+     * Demander des documents supplémentaires
+     */
+    public function requestDocuments(Request $request, Prestataire $prestataire)
+    {
+        $validated = $request->validate([
+            'message' => 'required|string|max:500',
+            'documents_requis' => 'required|array',
+            'documents_requis.*' => 'string|in:piece_identite,certificat_travail,diplome,autre',
+        ]);
+
+        // Logique pour envoyer une demande de documents (email, notification, etc.)
+        // Ici vous pouvez créer une table "demandes_documents" ou envoyer un email
+        
+        return redirect()->back()
+            ->with('success', 'Demande de documents supplémentaires envoyée au prestataire.');
+    }
+
+    /**
      * Refuser un compte prestataire
      */
     public function reject(Request $request, Prestataire $prestataire)
@@ -283,6 +302,17 @@ class PrestataireController extends Controller
 
         return redirect()->back()
             ->with('success', 'Prestataire débloqué avec succès.');
+    }
+
+    /**
+     * Réinitialiser le score de confiance
+     */
+    public function resetScore(Prestataire $prestataire)
+    {
+        $prestataire->update(['score_confiance' => 5.00]);
+
+        return redirect()->back()
+            ->with('success', 'Score de confiance réinitialisé à 5.00.');
     }
 
     /**

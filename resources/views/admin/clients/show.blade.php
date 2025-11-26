@@ -171,6 +171,140 @@
                 @endif
             </div>
         </div>
+
+        <!-- Historique des Paiements -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="card-title m-0">Historique des Paiements</h5>
+            </div>
+            <div class="card-body">
+                @php
+                    $transactions = \App\Models\Transaction::where('client_id', $client->id)
+                        ->latest()
+                        ->limit(10)
+                        ->get();
+                @endphp
+                @if($transactions->count() > 0)
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Type</th>
+                                    <th>Montant</th>
+                                    <th>Méthode</th>
+                                    <th>Statut</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($transactions as $transaction)
+                                <tr>
+                                    <td>{{ $transaction->created_at->format('d/m/Y H:i') }}</td>
+                                    <td>
+                                        <span class="badge bg-label-info">{{ ucfirst($transaction->type) }}</span>
+                                    </td>
+                                    <td>{{ number_format($transaction->montant, 0, ',', ' ') }} FCFA</td>
+                                    <td>{{ ucfirst(str_replace('_', ' ', $transaction->methode_paiement ?? 'N/A')) }}</td>
+                                    <td>
+                                        <span class="badge bg-label-{{ $transaction->statut === 'validee' ? 'success' : 'warning' }}">
+                                            {{ ucfirst($transaction->statut) }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                @else
+                    <p class="text-muted text-center mb-0">Aucun paiement</p>
+                @endif
+            </div>
+        </div>
+
+        <!-- Avis Donnés -->
+        @php
+            $avis = \App\Models\Avis::where('client_id', $client->id)
+                ->latest()
+                ->limit(5)
+                ->get();
+        @endphp
+        @if($avis->count() > 0)
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="card-title m-0">Avis Donnés</h5>
+            </div>
+            <div class="card-body">
+                @foreach($avis as $avi)
+                <div class="border-bottom pb-3 mb-3">
+                    <div class="d-flex justify-content-between mb-2">
+                        <strong>{{ $avi->prestataire->user->name ?? 'Prestataire' }}</strong>
+                        <div>
+                            @for($i = 1; $i <= 5; $i++)
+                                <i class="bx {{ $i <= $avi->note ? 'bxs-star text-warning' : 'bx-star text-muted' }}"></i>
+                            @endfor
+                        </div>
+                    </div>
+                    @if($avi->commentaire)
+                        <p class="mb-0">{{ $avi->commentaire }}</p>
+                    @endif
+                    <small class="text-muted">{{ $avi->created_at->format('d/m/Y') }}</small>
+                </div>
+                @endforeach
+            </div>
+        </div>
+        @endif
+
+        <!-- Tentatives de Contournement -->
+        @php
+            $contournements = \App\Models\Contournement::where('client_id', $client->id)
+                ->latest()
+                ->get();
+        @endphp
+        @if($contournements->count() > 0)
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="card-title m-0">
+                    ⚠️ Tentatives de Contournement ({{ $contournements->count() }})
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Prestataire</th>
+                                <th>Statut</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($contournements as $contournement)
+                            <tr>
+                                <td>{{ $contournement->created_at->format('d/m/Y') }}</td>
+                                <td>
+                                    <span class="badge bg-label-danger">{{ ucfirst(str_replace('_', ' ', $contournement->type)) }}</span>
+                                </td>
+                                <td>{{ $contournement->prestataire->user->name ?? 'N/A' }}</td>
+                                <td>
+                                    <span class="badge bg-label-{{ $contournement->statut === 'confirme' ? 'danger' : 'warning' }}">
+                                        {{ ucfirst($contournement->statut) }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <a href="{{ route('admin.contournements.show', $contournement) }}" class="btn btn-sm btn-info">
+                                        <i class="bx bx-show"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        @endif
     </div>
 </div>
 @endsection

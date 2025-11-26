@@ -195,4 +195,20 @@ class ClientController extends Controller
         return redirect()->back()
             ->with('success', 'Client réactivé avec succès.');
     }
+
+    /**
+     * Avertir un client
+     */
+    public function warn(Request $request, Client $client)
+    {
+        $validated = $request->validate([
+            'message' => 'required|string|max:500',
+        ]);
+
+        // Logique pour envoyer un avertissement (email, notification, etc.)
+        // Ici vous pouvez créer une table "avertissements" ou envoyer un email
+        
+        return redirect()->back()
+            ->with('success', 'Avertissement envoyé au client.');
+    }
 }

@@ -68,6 +68,21 @@ class SousCategorieServiceController extends Controller
     }
 
     /**
+     * Display the specified resource.
+     */
+    public function show(SousCategorieService $sousCategorie)
+    {
+        $sousCategorie->load(['categorieService', 'commandes.client.user', 'commandes.prestataire.user']);
+        
+        $stats = [
+            'commandes_total' => $sousCategorie->commandes()->count(),
+            'commandes_terminees' => $sousCategorie->commandes()->where('statut', 'terminee')->count(),
+        ];
+
+        return view('admin.sous-categories.show', compact('sousCategorie', 'stats'));
+    }
+
+    /**
      * Show the form for editing the specified resource.
      */
     public function edit(SousCategorieService $sousCategorie)

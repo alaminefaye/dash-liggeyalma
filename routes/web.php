@@ -42,6 +42,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/clients/export', [ClientController::class, 'export'])->name('clients.export');
     Route::post('/clients/{client}/suspend', [ClientController::class, 'suspend'])->name('clients.suspend');
     Route::post('/clients/{client}/activate', [ClientController::class, 'activate'])->name('clients.activate');
+    Route::post('/clients/{client}/warn', [ClientController::class, 'warn'])->name('clients.warn');
     
     // Prestataires
     Route::get('/prestataires/pending', [PrestataireController::class, 'pending'])->name('prestataires.pending');
@@ -49,11 +50,13 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::resource('prestataires', PrestataireController::class);
     Route::post('/prestataires/{prestataire}/validate', [PrestataireController::class, 'validate'])->name('prestataires.validate');
     Route::post('/prestataires/{prestataire}/reject', [PrestataireController::class, 'reject'])->name('prestataires.reject');
+    Route::post('/prestataires/{prestataire}/request-documents', [PrestataireController::class, 'requestDocuments'])->name('prestataires.request-documents');
     Route::post('/prestataires/{prestataire}/suspend', [PrestataireController::class, 'suspend'])->name('prestataires.suspend');
     Route::post('/prestataires/{prestataire}/activate', [PrestataireController::class, 'activate'])->name('prestataires.activate');
     Route::post('/prestataires/{prestataire}/block', [PrestataireController::class, 'block'])->name('prestataires.block');
     Route::post('/prestataires/{prestataire}/unblock', [PrestataireController::class, 'unblock'])->name('prestataires.unblock');
     Route::post('/prestataires/{prestataire}/force-commission-payment', [PrestataireController::class, 'forceCommissionPayment'])->name('prestataires.force-commission-payment');
+    Route::post('/prestataires/{prestataire}/reset-score', [PrestataireController::class, 'resetScore'])->name('prestataires.reset-score');
     
     // Catégories de Services
     Route::resource('categories', CategorieServiceController::class);

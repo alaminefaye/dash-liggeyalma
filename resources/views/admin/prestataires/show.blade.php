@@ -60,6 +60,9 @@
                         <button type="button" class="btn btn-danger w-100" data-bs-toggle="modal" data-bs-target="#rejectModal">
                             <i class="bx bx-x"></i> Refuser le compte
                         </button>
+                        <button type="button" class="btn btn-info w-100" data-bs-toggle="modal" data-bs-target="#requestDocumentsModal">
+                            <i class="bx bx-file"></i> Demander documents
+                        </button>
                     @endif
 
                     <a href="{{ route('admin.prestataires.edit', $prestataire) }}" class="btn btn-primary w-100">
@@ -245,8 +248,175 @@
             </div>
         </div>
         @endif
+
+        <!-- Historique des Interventions -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="card-title m-0">Historique des Interventions</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Date</th>
+                                <th>Client</th>
+                                <th>Service</th>
+                                <th>Montant</th>
+                                <th>Statut</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($prestataire->commandes()->latest()->limit(10)->get() as $commande)
+                            <tr>
+                                <td>#{{ $commande->id }}</td>
+                                <td>{{ $commande->created_at->format('d/m/Y') }}</td>
+                                <td>{{ $commande->client->user->name ?? 'N/A' }}</td>
+                                <td>{{ $commande->categorieService->nom ?? 'N/A' }}</td>
+                                <td>{{ number_format($commande->montant_total ?? 0, 0, ',', ' ') }} FCFA</td>
+                                <td>
+                                    <span class="badge bg-label-{{ $commande->statut === 'terminee' ? 'success' : 'warning' }}">
+                                        {{ ucfirst(str_replace('_', ' ', $commande->statut)) }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <a href="{{ route('admin.commandes.show', $commande) }}" class="btn btn-sm btn-info">
+                                        <i class="bx bx-show"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            @empty
+                            <tr>
+                                <td colspan="7" class="text-center text-muted">Aucune intervention</td>
+                            </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Avis Reçus -->
+        @if($prestataire->avis->count() > 0)
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="card-title m-0">Avis Reçus</h5>
+            </div>
+            <div class="card-body">
+                @foreach($prestataire->avis()->latest()->limit(5)->get() as $avi)
+                <div class="border-bottom pb-3 mb-3">
+                    <div class="d-flex justify-content-between mb-2">
+                        <strong>{{ $avi->client->user->name ?? 'Client anonyme' }}</strong>
+                        <div>
+                            @for($i = 1; $i <= 5; $i++)
+                                <i class="bx {{ $i <= $avi->note ? 'bxs-star text-warning' : 'bx-star text-muted' }}"></i>
+                            @endfor
+                        </div>
+                    </div>
+                    @if($avi->commentaire)
+                        <p class="mb-0">{{ $avi->commentaire }}</p>
+                    @endif
+                    <small class="text-muted">{{ $avi->created_at->format('d/m/Y') }}</small>
+                </div>
+                @endforeach
+            </div>
+        </div>
+        @endif
+
+        <!-- Contournements Détectés -->
+        @if($prestataire->contournements->count() > 0)
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="card-title m-0">
+                    ⚠️ Contournements Détectés ({{ $prestataire->contournements->count() }})
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Statut</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($prestataire->contournements()->latest()->limit(5)->get() as $contournement)
+                            <tr>
+                                <td>{{ $contournement->created_at->format('d/m/Y') }}</td>
+                                <td>
+                                    <span class="badge bg-label-danger">{{ ucfirst(str_replace('_', ' ', $contournement->type)) }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-label-{{ $contournement->statut === 'confirme' ? 'danger' : 'warning' }}">
+                                        {{ ucfirst($contournement->statut) }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <a href="{{ route('admin.contournements.show', $contournement) }}" class="btn btn-sm btn-info">
+                                        <i class="bx bx-show"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        @endif
     </div>
 </div>
+
+<!-- Modal Demander Documents -->
+@if($prestataire->statut_inscription === 'en_attente')
+<div class="modal fade" id="requestDocumentsModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form action="{{ route('admin.prestataires.request-documents', $prestataire) }}" method="POST">
+                @csrf
+                <div class="modal-header">
+                    <h5 class="modal-title">Demander des documents supplémentaires</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Documents requis <span class="text-danger">*</span></label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="documents_requis[]" value="piece_identite" id="doc_piece">
+                            <label class="form-check-label" for="doc_piece">Pièce d'identité</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="documents_requis[]" value="certificat_travail" id="doc_certif">
+                            <label class="form-check-label" for="doc_certif">Certificat de travail</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="documents_requis[]" value="diplome" id="doc_diplome">
+                            <label class="form-check-label" for="doc_diplome">Diplôme</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="documents_requis[]" value="autre" id="doc_autre">
+                            <label class="form-check-label" for="doc_autre">Autre</label>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Message <span class="text-danger">*</span></label>
+                        <textarea name="message" class="form-control" rows="4" required placeholder="Expliquez quels documents supplémentaires sont nécessaires..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-label-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-info">Envoyer la demande</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@endif
 
 <!-- Modal Refus -->
 @if($prestataire->statut_inscription === 'en_attente')

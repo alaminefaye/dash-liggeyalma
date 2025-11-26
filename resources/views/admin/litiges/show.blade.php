@@ -132,6 +132,9 @@
                     <button type="button" class="btn btn-primary w-100 mb-2" data-bs-toggle="modal" data-bs-target="#processModal">
                         <i class="bx bx-check"></i> Traiter le litige
                     </button>
+                    <button type="button" class="btn btn-info w-100 mb-2" data-bs-toggle="modal" data-bs-target="#mediationModal">
+                        <i class="bx bx-message"></i> Médiation
+                    </button>
                 @endif
 
                 @if($litige->statut === 'en_cours')
@@ -215,6 +218,62 @@
                     <button type="submit" class="btn btn-success">Résoudre</button>
                 </div>
             </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Médiation -->
+<div class="modal fade" id="mediationModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Médiation - Contacter les parties</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-body text-center">
+                                <h6>Client</h6>
+                                <p class="mb-1"><strong>{{ $litige->client->user->name }}</strong></p>
+                                <p class="mb-1"><small>{{ $litige->client->user->email }}</small></p>
+                                <p class="mb-0"><small>{{ $litige->client->user->phone ?? 'N/A' }}</small></p>
+                                <a href="mailto:{{ $litige->client->user->email }}" class="btn btn-sm btn-primary mt-2">
+                                    <i class="bx bx-envelope"></i> Envoyer email
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-body text-center">
+                                <h6>Prestataire</h6>
+                                <p class="mb-1"><strong>{{ $litige->prestataire->user->name }}</strong></p>
+                                <p class="mb-1"><small>{{ $litige->prestataire->user->email }}</small></p>
+                                <p class="mb-0"><small>{{ $litige->prestataire->user->phone ?? 'N/A' }}</small></p>
+                                <a href="mailto:{{ $litige->prestataire->user->email }}" class="btn btn-sm btn-primary mt-2">
+                                    <i class="bx bx-envelope"></i> Envoyer email
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Message de médiation</label>
+                    <textarea class="form-control" rows="4" placeholder="Rédigez un message de médiation pour les deux parties..."></textarea>
+                </div>
+                <div class="alert alert-info">
+                    <i class="bx bx-info-circle"></i> 
+                    Vous pouvez contacter les deux parties par email ou téléphone pour résoudre ce litige.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-label-secondary" data-bs-dismiss="modal">Fermer</button>
+                <button type="button" class="btn btn-info">
+                    <i class="bx bx-send"></i> Envoyer message
+                </button>
+            </div>
         </div>
     </div>
 </div>

@@ -201,6 +201,41 @@
             </div>
         </div>
         @endif
+
+        <!-- Messages/Chat -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="card-title m-0">Messages / Chat</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="bx bx-info-circle"></i> 
+                    <strong>Note :</strong> Le système de chat sera disponible une fois l'API mobile connectée.
+                </div>
+                @php
+                    // Simuler des messages pour la démo (à remplacer par la vraie logique)
+                    $messages = [
+                        ['user' => 'Client', 'message' => 'Bonjour, pouvez-vous venir aujourd\'hui ?', 'date' => now()->subHours(2)],
+                        ['user' => 'Prestataire', 'message' => 'Oui, je serai là à 14h', 'date' => now()->subHours(1)],
+                    ];
+                @endphp
+                @if(count($messages) > 0)
+                    <div class="chat-messages" style="max-height: 300px; overflow-y: auto;">
+                        @foreach($messages as $msg)
+                        <div class="mb-3 p-2 {{ $msg['user'] === 'Client' ? 'bg-light' : 'bg-primary bg-opacity-10' }} rounded">
+                            <div class="d-flex justify-content-between mb-1">
+                                <strong>{{ $msg['user'] }}</strong>
+                                <small class="text-muted">{{ $msg['date']->format('d/m/Y H:i') }}</small>
+                            </div>
+                            <p class="mb-0">{{ $msg['message'] }}</p>
+                        </div>
+                        @endforeach
+                    </div>
+                @else
+                    <p class="text-muted text-center">Aucun message pour cette commande</p>
+                @endif
+            </div>
+        </div>
     </div>
 
     <div class="col-lg-4">

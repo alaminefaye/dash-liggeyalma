@@ -28,14 +28,32 @@ class ParametreController extends Controller
     public function update(Request $request)
     {
         $validated = $request->validate([
-            'parametres' => 'required|array',
+            'parametres' => 'nullable|array',
+            'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
-        DB::transaction(function() use ($validated) {
-            foreach ($validated['parametres'] as $cle => $valeur) {
-                DB::table('parametres')
-                    ->where('cle', $cle)
-                    ->update(['valeur' => $valeur]);
+        DB::transaction(function() use ($validated, $request) {
+            // Gérer l'upload du logo
+            if ($request->hasFile('logo')) {
+                $logoPath = $request->file('logo')->store('logos', 'public');
+                DB::table('parametres')->updateOrInsert(
+                    ['cle' => 'logo_application'],
+                    [
+                        'valeur' => $logoPath,
+                        'type' => 'string',
+                        'groupe' => 'general',
+                        'description' => 'Logo de l\'application'
+                    ]
+                );
+            }
+
+            // Mettre à jour les autres paramètres
+            if (isset($validated['parametres'])) {
+                foreach ($validated['parametres'] as $cle => $valeur) {
+                    DB::table('parametres')
+                        ->where('cle', $cle)
+                        ->update(['valeur' => $valeur]);
+                }
             }
         });
 
