@@ -137,4 +137,40 @@ class LitigeController extends Controller
         return redirect()->back()
             ->with('success', 'Litige résolu avec succès.');
     }
+
+    /**
+     * Rembourser directement un litige
+     */
+    public function refund(Request $request, Litige $litige)
+    {
+        $validated = $request->validate([
+            'montant_remboursement' => 'required|numeric|min:0',
+            'resolution' => 'nullable|string|max:1000',
+        ]);
+
+        DB::transaction(function() use ($litige, $validated) {
+            $litige->update([
+                'statut' => 'resolu',
+                'decision' => 'remboursement',
+                'montant_remboursement' => $validated['montant_remboursement'],
+                'resolution' => $validated['resolution'] ?? 'Remboursement effectué',
+                'traite_par' => auth()->id(),
+                'traite_le' => now(),
+            ]);
+
+            // Créer la transaction de remboursement
+            \App\Models\Transaction::create([
+                'commande_id' => $litige->commande_id,
+                'client_id' => $litige->client_id,
+                'prestataire_id' => $litige->prestataire_id,
+                'type' => 'refund',
+                'montant' => $validated['montant_remboursement'],
+                'statut' => 'validee',
+                'description' => 'Remboursement direct suite à litige #' . $litige->id,
+            ]);
+        });
+
+        return redirect()->back()
+            ->with('success', 'Remboursement effectué avec succès.');
+    }
 }

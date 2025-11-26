@@ -73,6 +73,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::resource('litiges', LitigeController::class)->only(['index', 'show']);
     Route::post('/litiges/{litige}/process', [LitigeController::class, 'process'])->name('litiges.process');
     Route::post('/litiges/{litige}/resolve', [LitigeController::class, 'resolve'])->name('litiges.resolve');
+    Route::post('/litiges/{litige}/refund', [LitigeController::class, 'refund'])->name('litiges.refund');
     Route::post('/litiges/{litige}/close', [LitigeController::class, 'close'])->name('litiges.close');
     
     // Commissions
