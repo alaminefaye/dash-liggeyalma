@@ -86,13 +86,137 @@
                 <div class="menu-inner-shadow"></div>
                 
                 <ul class="menu-inner py-1">
-                    <!-- Dashboard -->
-                    <li class="menu-item {{ request()->routeIs('dashboard') ? 'active' : '' }}">
-                        <a href="{{ route('dashboard') }}" class="menu-link">
-                            <i class="menu-icon tf-icons bx bx-home-circle"></i>
-                            <div data-i18n="Analytics">Dashboard</div>
-                        </a>
-                    </li>
+                    @auth
+                        @if(auth()->user()->isAdmin())
+                            <!-- Admin Dashboard -->
+                            <li class="menu-item {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
+                                <a href="{{ route('admin.dashboard') }}" class="menu-link">
+                                    <i class="menu-icon tf-icons bx bx-home-circle"></i>
+                                    <div data-i18n="Analytics">Dashboard Admin</div>
+                                </a>
+                            </li>
+                            
+                            <!-- Clients -->
+                            <li class="menu-item {{ request()->routeIs('admin.clients.*') ? 'active' : '' }}">
+                                <a href="{{ route('admin.clients.index') }}" class="menu-link">
+                                    <i class="menu-icon tf-icons bx bx-user"></i>
+                                    <div data-i18n="Clients">Clients</div>
+                                </a>
+                            </li>
+                            
+                            <!-- Prestataires -->
+                            <li class="menu-item {{ request()->routeIs('admin.prestataires.*') ? 'active' : '' }}">
+                                <a href="{{ route('admin.prestataires.index') }}" class="menu-link">
+                                    <i class="menu-icon tf-icons bx bx-briefcase"></i>
+                                    <div data-i18n="Prestataires">Prestataires</div>
+                                </a>
+                            </li>
+                            
+                            <!-- Catégories -->
+                            <li class="menu-item {{ request()->routeIs('admin.categories.*') ? 'active' : '' }}">
+                                <a href="{{ route('admin.categories.index') }}" class="menu-link">
+                                    <i class="menu-icon tf-icons bx bx-category"></i>
+                                    <div data-i18n="Categories">Catégories</div>
+                                </a>
+                            </li>
+                            
+                            <!-- Sous-Catégories -->
+                            <li class="menu-item {{ request()->routeIs('admin.sous-categories.*') ? 'active' : '' }}">
+                                <a href="{{ route('admin.sous-categories.index') }}" class="menu-link">
+                                    <i class="menu-icon tf-icons bx bx-list-ul"></i>
+                                    <div data-i18n="Sous-Catégories">Sous-Catégories</div>
+                                </a>
+                            </li>
+                            
+                            <!-- Commandes -->
+                            <li class="menu-item {{ request()->routeIs('admin.commandes.*') ? 'active' : '' }}">
+                                <a href="{{ route('admin.commandes.index') }}" class="menu-link">
+                                    <i class="menu-icon tf-icons bx bx-cart"></i>
+                                    <div data-i18n="Commandes">Commandes</div>
+                                </a>
+                            </li>
+                            
+                            <!-- Avis -->
+                            <li class="menu-item {{ request()->routeIs('admin.avis.*') ? 'active' : '' }}">
+                                <a href="{{ route('admin.avis.index') }}" class="menu-link">
+                                    <i class="menu-icon tf-icons bx bx-star"></i>
+                                    <div data-i18n="Avis">Avis</div>
+                                </a>
+                            </li>
+                            
+                            <!-- Transactions -->
+                            <li class="menu-item {{ request()->routeIs('admin.transactions.*') ? 'active' : '' }}">
+                                <a href="{{ route('admin.transactions.index') }}" class="menu-link">
+                                    <i class="menu-icon tf-icons bx bx-money"></i>
+                                    <div data-i18n="Transactions">Transactions</div>
+                                </a>
+                            </li>
+                            
+                            <!-- Retraits -->
+                            <li class="menu-item {{ request()->routeIs('admin.retraits.*') ? 'active' : '' }}">
+                                <a href="{{ route('admin.retraits.index') }}" class="menu-link">
+                                    <i class="menu-icon tf-icons bx bx-wallet"></i>
+                                    <div data-i18n="Retraits">Retraits</div>
+                                </a>
+                            </li>
+                            
+                            <!-- Anti-Contournement -->
+                            <li class="menu-item {{ request()->routeIs('admin.contournements.*') ? 'active' : '' }}">
+                                <a href="{{ route('admin.contournements.index') }}" class="menu-link">
+                                    <i class="menu-icon tf-icons bx bx-shield"></i>
+                                    <div data-i18n="Anti-Fraude">Anti-Contournement</div>
+                                </a>
+                            </li>
+                            
+                            <!-- Rapports -->
+                            <li class="menu-item {{ request()->routeIs('admin.rapports.*') ? 'active' : '' }}">
+                                <a href="{{ route('admin.rapports.index') }}" class="menu-link">
+                                    <i class="menu-icon tf-icons bx bx-bar-chart"></i>
+                                    <div data-i18n="Rapports">Rapports</div>
+                                </a>
+                            </li>
+                            
+                            <!-- Litiges -->
+                            <li class="menu-item {{ request()->routeIs('admin.litiges.*') ? 'active' : '' }}">
+                                <a href="{{ route('admin.litiges.index') }}" class="menu-link">
+                                    <i class="menu-icon tf-icons bx bx-error"></i>
+                                    <div data-i18n="Litiges">Litiges</div>
+                                </a>
+                            </li>
+                            
+                            <!-- Commissions -->
+                            <li class="menu-item {{ request()->routeIs('admin.commissions.*') ? 'active' : '' }}">
+                                <a href="{{ route('admin.commissions.index') }}" class="menu-link">
+                                    <i class="menu-icon tf-icons bx bx-percent"></i>
+                                    <div data-i18n="Commissions">Commissions</div>
+                                </a>
+                            </li>
+                            
+                            <!-- Notifications -->
+                            <li class="menu-item {{ request()->routeIs('admin.notifications.*') ? 'active' : '' }}">
+                                <a href="{{ route('admin.notifications.index') }}" class="menu-link">
+                                    <i class="menu-icon tf-icons bx bx-bell"></i>
+                                    <div data-i18n="Notifications">Notifications</div>
+                                </a>
+                            </li>
+                            
+                            <!-- Paramètres -->
+                            <li class="menu-item {{ request()->routeIs('admin.parametres.*') ? 'active' : '' }}">
+                                <a href="{{ route('admin.parametres.index') }}" class="menu-link">
+                                    <i class="menu-icon tf-icons bx bx-cog"></i>
+                                    <div data-i18n="Paramètres">Paramètres</div>
+                                </a>
+                            </li>
+                        @else
+                            <!-- User Dashboard -->
+                            <li class="menu-item {{ request()->routeIs('dashboard') ? 'active' : '' }}">
+                                <a href="{{ route('dashboard') }}" class="menu-link">
+                                    <i class="menu-icon tf-icons bx bx-home-circle"></i>
+                                    <div data-i18n="Analytics">Dashboard</div>
+                                </a>
+                            </li>
+                        @endif
+                    @endauth
                     
                     @yield('menu-items')
                 </ul>

@@ -15,11 +15,30 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Create admin user
-        User::factory()->create([
-            'name' => 'Admin User',
-            'email' => 'admin@admin.com',
-            'password' => bcrypt('password'),
+        // Create admin user (only if doesn't exist)
+        User::firstOrCreate(
+            ['email' => 'admin@admin.com'],
+            [
+                'name' => 'Admin User',
+                'password' => bcrypt('password'),
+                'role' => 'admin',
+                'status' => 'active',
+            ]
+        );
+        
+        // Seed categories with subcategories
+        $this->call([
+            CategorieServiceSeeder::class,
+        ]);
+        
+        // Seed clients
+        $this->call([
+            ClientSeeder::class,
+        ]);
+        
+        // Seed prestataires
+        $this->call([
+            PrestataireSeeder::class,
         ]);
     }
 }
