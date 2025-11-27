@@ -11,6 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Vérifier que les tables existent avant de créer les foreign keys
+        if (!Schema::hasTable('prestataires')) {
+            throw new \Exception('La table prestataires doit exister avant de créer prestataire_positions');
+        }
+        if (!Schema::hasTable('commandes')) {
+            throw new \Exception('La table commandes doit exister avant de créer prestataire_positions');
+        }
+
         Schema::create('prestataire_positions', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('prestataire_id');
@@ -23,29 +31,20 @@ return new class extends Migration
             $table->timestamp('timestamp');
             $table->timestamps();
             
+            // Ajouter les foreign keys après la création de la table
+            $table->foreign('prestataire_id')
+                ->references('id')
+                ->on('prestataires')
+                ->onDelete('cascade');
+                
+            $table->foreign('commande_id')
+                ->references('id')
+                ->on('commandes')
+                ->onDelete('set null');
+            
             $table->index(['prestataire_id', 'commande_id']);
             $table->index('timestamp');
         });
-
-        // Ajouter les foreign keys après la création de la table
-        // Vérifier que les tables existent avant d'ajouter les foreign keys
-        if (Schema::hasTable('prestataires')) {
-            Schema::table('prestataire_positions', function (Blueprint $table) {
-                $table->foreign('prestataire_id', 'fk_prestataire_positions_prestataire_id')
-                    ->references('id')
-                    ->on('prestataires')
-                    ->onDelete('cascade');
-            });
-        }
-        
-        if (Schema::hasTable('commandes')) {
-            Schema::table('prestataire_positions', function (Blueprint $table) {
-                $table->foreign('commande_id', 'fk_prestataire_positions_commande_id')
-                    ->references('id')
-                    ->on('commandes')
-                    ->onDelete('set null');
-            });
-        }
     }
 
     /**
