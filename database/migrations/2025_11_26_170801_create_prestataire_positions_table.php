@@ -11,14 +11,6 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Vérifier que les tables existent avant de créer les foreign keys
-        if (!Schema::hasTable('prestataires')) {
-            throw new \Exception('La table prestataires doit exister avant de créer prestataire_positions');
-        }
-        if (!Schema::hasTable('commandes')) {
-            throw new \Exception('La table commandes doit exister avant de créer prestataire_positions');
-        }
-
         Schema::create('prestataire_positions', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('prestataire_id');
@@ -31,7 +23,12 @@ return new class extends Migration
             $table->timestamp('timestamp');
             $table->timestamps();
             
-            // Ajouter les foreign keys après la création de la table
+            $table->index(['prestataire_id', 'commande_id']);
+            $table->index('timestamp');
+        });
+
+        // Ajouter les foreign keys après la création de la table
+        Schema::table('prestataire_positions', function (Blueprint $table) {
             $table->foreign('prestataire_id')
                 ->references('id')
                 ->on('prestataires')
@@ -41,9 +38,6 @@ return new class extends Migration
                 ->references('id')
                 ->on('commandes')
                 ->onDelete('set null');
-            
-            $table->index(['prestataire_id', 'commande_id']);
-            $table->index('timestamp');
         });
     }
 
