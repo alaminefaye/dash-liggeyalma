@@ -35,4 +35,33 @@ return [
         ],
     ],
 
+    'google_maps' => [
+        'api_key' => env('GOOGLE_MAPS_API_KEY'),
+    ],
+
+    'wave' => [
+        'api_key' => env('WAVE_API_KEY'),
+        'merchant_key' => env('WAVE_MERCHANT_KEY'),
+        'base_url' => env('WAVE_BASE_URL', 'https://api.wave.com/v1'),
+    ],
+
+    'orange_money' => [
+        'merchant_id' => env('ORANGE_MONEY_MERCHANT_ID'),
+        'merchant_key' => env('ORANGE_MONEY_MERCHANT_KEY'),
+        'base_url' => env('ORANGE_MONEY_BASE_URL', 'https://api.orange.com/orange-money-webpay'),
+    ],
+
+    'mtn' => [
+        'api_key' => env('MTN_API_KEY'),
+        'api_secret' => env('MTN_API_SECRET'),
+        'subscription_key' => env('MTN_SUBSCRIPTION_KEY'),
+        'environment' => env('MTN_ENVIRONMENT', 'sandbox'), // 'sandbox' or 'production'
+    ],
+
+    'stripe' => [
+        'secret_key' => env('STRIPE_SECRET_KEY'),
+        'public_key' => env('STRIPE_PUBLIC_KEY'),
+        'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
+    ],
+
 ];

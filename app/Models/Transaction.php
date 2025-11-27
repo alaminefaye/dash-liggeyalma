@@ -18,6 +18,11 @@ class Transaction extends Model
         'statut',
         'reference_externe',
         'notes',
+        'provider',
+        'payment_id',
+        'payment_url',
+        'client_secret',
+        'phone_number',
     ];
 
     protected $casts = [

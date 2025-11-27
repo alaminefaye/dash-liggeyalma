@@ -203,7 +203,303 @@ class PrestataireController extends Controller
                 'disponible' => $prestataire->disponible,
                 'score_confiance' => (float) $prestataire->score_confiance,
                 'avis' => $recentAvis,
+                'galerie_travaux' => array_map(function ($photo) {
+                    return asset('storage/' . $photo);
+                }, $prestataire->galerie_travaux ?? []),
             ],
+        ]);
+    }
+
+    /**
+     * Update prestataire availability
+     */
+    public function updateAvailability(Request $request)
+    {
+        $user = $request->user();
+        
+        if ($user->role !== 'prestataire') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Accès non autorisé',
+            ], 403);
+        }
+
+        $prestataire = Prestataire::where('user_id', $user->id)->first();
+        if (!$prestataire) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Prestataire non trouvé',
+            ], 404);
+        }
+
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
+            'disponible' => 'required|boolean',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur de validation',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $prestataire->update([
+            'disponible' => $request->disponible,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Disponibilité mise à jour',
+            'data' => [
+                'disponible' => $prestataire->disponible,
+            ],
+        ]);
+    }
+
+    /**
+     * Get prestataire dashboard stats
+     */
+    public function dashboardStats(Request $request)
+    {
+        $user = $request->user();
+        
+        if ($user->role !== 'prestataire') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Accès non autorisé',
+            ], 403);
+        }
+
+        $prestataire = Prestataire::where('user_id', $user->id)->first();
+        if (!$prestataire) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Prestataire non trouvé',
+            ], 404);
+        }
+
+        // Statistiques
+        $demandesEnAttente = $prestataire->commandes()
+            ->where('statut', 'en_attente')
+            ->count();
+        
+        $interventionsEnCours = $prestataire->commandes()
+            ->whereIn('statut', ['acceptee', 'en_route', 'arrivee', 'en_cours'])
+            ->count();
+        
+        $interventionsTerminees = $prestataire->commandes()
+            ->where('statut', 'terminee')
+            ->count();
+        
+        // Revenus du mois
+        $debutMois = now()->startOfMonth();
+        $finMois = now()->endOfMonth();
+        $revenusMois = $prestataire->transactions()
+            ->where('type', 'paiement')
+            ->where('statut', 'validee')
+            ->whereBetween('created_at', [$debutMois, $finMois])
+            ->sum('montant');
+
+        // Demandes récentes (5 dernières)
+        $demandesRecentes = $prestataire->commandes()
+            ->where('statut', 'en_attente')
+            ->with(['client.user', 'categorieService'])
+            ->orderBy('created_at', 'desc')
+            ->limit(5)
+            ->get()
+            ->map(function ($commande) {
+                return [
+                    'id' => $commande->id,
+                    'description' => $commande->description,
+                    'adresse' => $commande->adresse_intervention,
+                    'montant' => $commande->montant_total,
+                    'date' => $commande->created_at->format('Y-m-d H:i:s'),
+                    'client' => [
+                        'name' => $commande->client->user->name ?? 'N/A',
+                        'photo' => $commande->client->user->photo ? asset('storage/' . $commande->client->user->photo) : null,
+                    ],
+                    'categorie' => $commande->categorieService->nom ?? 'N/A',
+                ];
+            });
+
+        // Interventions du jour
+        $aujourdhui = now()->startOfDay();
+        $interventionsAujourdhui = $prestataire->commandes()
+            ->whereIn('statut', ['acceptee', 'en_route', 'arrivee', 'en_cours'])
+            ->whereDate('date_heure_souhaitee', '>=', $aujourdhui)
+            ->with(['client.user', 'categorieService'])
+            ->orderBy('date_heure_souhaitee', 'asc')
+            ->limit(5)
+            ->get()
+            ->map(function ($commande) {
+                return [
+                    'id' => $commande->id,
+                    'description' => $commande->description,
+                    'adresse' => $commande->adresse_intervention,
+                    'date_heure' => $commande->date_heure_souhaitee?->format('Y-m-d H:i:s'),
+                    'statut' => $commande->statut,
+                    'client' => [
+                        'name' => $commande->client->user->name ?? 'N/A',
+                    ],
+                ];
+            });
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'disponible' => $prestataire->disponible,
+                'stats' => [
+                    'demandes_en_attente' => $demandesEnAttente,
+                    'interventions_en_cours' => $interventionsEnCours,
+                    'interventions_terminees' => $interventionsTerminees,
+                    'revenus_mois' => (float) $revenusMois,
+                ],
+                'demandes_recentes' => $demandesRecentes,
+                'interventions_aujourdhui' => $interventionsAujourdhui,
+            ],
+        ]);
+    }
+
+    /**
+     * Get prestataire gallery
+     */
+    public function getGallery(Request $request)
+    {
+        $user = $request->user();
+        
+        if ($user->role !== 'prestataire') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Accès non autorisé',
+            ], 403);
+        }
+
+        $prestataire = Prestataire::where('user_id', $user->id)->first();
+        if (!$prestataire) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Prestataire non trouvé',
+            ], 404);
+        }
+
+        $gallery = $prestataire->galerie_travaux ?? [];
+        
+        // Convert paths to full URLs
+        $galleryUrls = array_map(function ($photo) {
+            return asset('storage/' . $photo);
+        }, $gallery);
+
+        return response()->json([
+            'success' => true,
+            'data' => $galleryUrls,
+        ]);
+    }
+
+    /**
+     * Add photo to gallery
+     */
+    public function addPhotoToGallery(Request $request)
+    {
+        $user = $request->user();
+        
+        if ($user->role !== 'prestataire') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Accès non autorisé',
+            ], 403);
+        }
+
+        $prestataire = Prestataire::where('user_id', $user->id)->first();
+        if (!$prestataire) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Prestataire non trouvé',
+            ], 404);
+        }
+
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
+            'photo' => 'required|image|mimes:jpeg,png,jpg,gif|max:5120', // 5MB max
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur de validation',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        try {
+            $photoPath = $request->file('photo')->store('prestataires/galerie', 'public');
+            
+            $gallery = $prestataire->galerie_travaux ?? [];
+            $gallery[] = $photoPath;
+            
+            $prestataire->update(['galerie_travaux' => $gallery]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Photo ajoutée à la galerie',
+                'data' => [
+                    'url' => asset('storage/' . $photoPath),
+                    'path' => $photoPath,
+                ],
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de l\'upload: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Delete photo from gallery
+     */
+    public function deletePhotoFromGallery(Request $request, $photoIndex)
+    {
+        $user = $request->user();
+        
+        if ($user->role !== 'prestataire') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Accès non autorisé',
+            ], 403);
+        }
+
+        $prestataire = Prestataire::where('user_id', $user->id)->first();
+        if (!$prestataire) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Prestataire non trouvé',
+            ], 404);
+        }
+
+        $gallery = $prestataire->galerie_travaux ?? [];
+        
+        if (!isset($gallery[$photoIndex])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Photo non trouvée',
+            ], 404);
+        }
+
+        // Delete file from storage
+        $photoPath = $gallery[$photoIndex];
+        if (\Illuminate\Support\Facades\Storage::disk('public')->exists($photoPath)) {
+            \Illuminate\Support\Facades\Storage::disk('public')->delete($photoPath);
+        }
+
+        // Remove from array
+        unset($gallery[$photoIndex]);
+        $gallery = array_values($gallery); // Re-index array
+        
+        $prestataire->update(['galerie_travaux' => $gallery]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Photo supprimée de la galerie',
         ]);
     }
 }

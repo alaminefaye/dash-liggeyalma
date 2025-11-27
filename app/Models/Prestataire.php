@@ -25,6 +25,7 @@ class Prestataire extends Model
         'score_confiance',
         'statut_inscription',
         'documents',
+        'galerie_travaux',
         'disponible',
     ];
 
@@ -33,6 +34,7 @@ class Prestataire extends Model
         'forfaits' => 'array',
         'zone_intervention' => 'array',
         'documents' => 'array',
+        'galerie_travaux' => 'array',
         'tarif_horaire' => 'decimal:2',
         'frais_deplacement' => 'decimal:2',
         'latitude' => 'decimal:8',

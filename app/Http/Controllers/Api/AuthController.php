@@ -282,5 +282,110 @@ class AuthController extends Controller
             ],
         ]);
     }
+
+    /**
+     * Send password reset code
+     */
+    public function sendPasswordResetCode(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'identifier' => 'required|string', // email or phone
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur de validation',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        // Find user by email or phone
+        $user = User::where('email', $request->identifier)
+            ->orWhere('phone', $request->identifier)
+            ->first();
+
+        if (!$user) {
+            // Don't reveal if user exists for security
+            return response()->json([
+                'success' => true,
+                'message' => 'Si ce compte existe, un code de réinitialisation a été envoyé',
+            ]);
+        }
+
+        // Generate OTP code (6 digits)
+        $otp = str_pad((string) rand(0, 999999), 6, '0', STR_PAD_LEFT);
+
+        // Store OTP in cache for 10 minutes
+        \Cache::put('password_reset_' . $user->id, $otp, now()->addMinutes(10));
+
+        // TODO: Send OTP via SMS or Email
+        // For now, we'll just return success
+        // In production, implement SMS/Email sending here
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Code de réinitialisation envoyé',
+            'data' => [
+                'user_id' => $user->id,
+                // In development, you might want to return the OTP for testing
+                // 'otp' => $otp, // Remove in production
+            ],
+        ]);
+    }
+
+    /**
+     * Reset password with OTP
+     */
+    public function resetPassword(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'identifier' => 'required|string',
+            'otp' => 'required|string|size:6',
+            'password' => 'required|string|min:6|confirmed',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur de validation',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        // Find user
+        $user = User::where('email', $request->identifier)
+            ->orWhere('phone', $request->identifier)
+            ->first();
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Utilisateur non trouvé',
+            ], 404);
+        }
+
+        // Verify OTP
+        $storedOtp = \Cache::get('password_reset_' . $user->id);
+        if (!$storedOtp || $storedOtp !== $request->otp) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Code OTP invalide ou expiré',
+            ], 400);
+        }
+
+        // Update password
+        $user->update([
+            'password' => Hash::make($request->password),
+        ]);
+
+        // Delete OTP from cache
+        \Cache::forget('password_reset_' . $user->id);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Mot de passe réinitialisé avec succès',
+        ]);
+    }
 }
 
