@@ -88,6 +88,12 @@ class AuthController extends Controller
             'password' => 'required|string|min:6|confirmed',
             'type' => 'nullable|string|in:client,prestataire', // Type d'utilisateur
             'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            // Champs spécifiques prestataire
+            'phone' => 'nullable|string|max:20',
+            'metier' => 'nullable|string|max:255',
+            'description' => 'nullable|string',
+            'annees_experience' => 'nullable|integer|min:0',
+            'tarif_horaire' => 'nullable|numeric|min:0',
         ]);
 
         if ($validator->fails()) {
@@ -134,10 +140,12 @@ class AuthController extends Controller
             DB::beginTransaction();
 
             // Create user
+            $userPhone = !$isEmail ? $request->identifier : ($request->input('phone') ?? null);
+            
             $user = User::create([
                 'name' => $request->name,
                 'email' => $isEmail ? $request->identifier : null,
-                'phone' => !$isEmail ? $request->identifier : null,
+                'phone' => $userPhone,
                 'password' => Hash::make($request->password),
                 'role' => $userType, // client or prestataire
                 'photo' => $photoPath,
@@ -148,6 +156,10 @@ class AuthController extends Controller
             if ($userType === 'prestataire') {
                 Prestataire::create([
                     'user_id' => $user->id,
+                    'metier' => $request->input('metier', 'Non spécifié'),
+                    'description' => $request->input('description'),
+                    'annees_experience' => $request->input('annees_experience', 0),
+                    'tarif_horaire' => $request->input('tarif_horaire'),
                     'statut_inscription' => 'en_attente', // En attente de validation admin
                     'solde' => 0,
                     'score_confiance' => 0,
