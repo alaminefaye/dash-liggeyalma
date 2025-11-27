@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -73,5 +74,21 @@ class User extends Authenticatable
     public function isPrestataire(): bool
     {
         return $this->role === 'prestataire';
+    }
+
+    /**
+     * Relation avec Client
+     */
+    public function client(): HasOne
+    {
+        return $this->hasOne(Client::class);
+    }
+
+    /**
+     * Relation avec Prestataire
+     */
+    public function prestataire(): HasOne
+    {
+        return $this->hasOne(Prestataire::class);
     }
 }

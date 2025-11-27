@@ -4,10 +4,13 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\Client;
+use App\Models\Prestataire;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
@@ -83,6 +86,7 @@ class AuthController extends Controller
             'name' => 'required|string|max:255',
             'identifier' => 'required|string', // email or phone
             'password' => 'required|string|min:6|confirmed',
+            'type' => 'nullable|string|in:client,prestataire', // Type d'utilisateur
             'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
@@ -122,16 +126,48 @@ class AuthController extends Controller
             $photoPath = $request->file('photo')->store('photos', 'public');
         }
 
-        // Create user
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $isEmail ? $request->identifier : null,
-            'phone' => !$isEmail ? $request->identifier : null,
-            'password' => Hash::make($request->password),
-            'role' => 'client', // Default role
-            'photo' => $photoPath,
-            'status' => 'active',
-        ]);
+        // Get user type (default: client)
+        $userType = $request->input('type', 'client');
+
+        // Use transaction to ensure data consistency
+        try {
+            DB::beginTransaction();
+
+            // Create user
+            $user = User::create([
+                'name' => $request->name,
+                'email' => $isEmail ? $request->identifier : null,
+                'phone' => !$isEmail ? $request->identifier : null,
+                'password' => Hash::make($request->password),
+                'role' => $userType, // client or prestataire
+                'photo' => $photoPath,
+                'status' => 'active',
+            ]);
+
+            // Create corresponding Client or Prestataire record
+            if ($userType === 'prestataire') {
+                Prestataire::create([
+                    'user_id' => $user->id,
+                    'statut_inscription' => 'en_attente', // En attente de validation admin
+                    'solde' => 0,
+                    'score_confiance' => 0,
+                    'disponible' => false,
+                ]);
+            } else {
+                Client::create([
+                    'user_id' => $user->id,
+                    'score_confiance' => 0,
+                ]);
+            }
+
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la création du compte: ' . $e->getMessage(),
+            ], 500);
+        }
 
         // Create token
         $token = $user->createToken('mobile-app')->plainTextToken;
