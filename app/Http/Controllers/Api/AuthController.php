@@ -94,6 +94,7 @@ class AuthController extends Controller
             'description' => 'nullable|string',
             'annees_experience' => 'nullable|integer|min:0',
             'tarif_horaire' => 'nullable|numeric|min:0',
+            'piece_identite' => 'nullable|image|mimes:jpeg,png,jpg,gif,pdf|max:5120', // 5MB max
         ]);
 
         if ($validator->fails()) {
@@ -154,12 +155,19 @@ class AuthController extends Controller
 
             // Create corresponding Client or Prestataire record
             if ($userType === 'prestataire') {
+                // Préparer les documents
+                $documents = [];
+                if ($pieceIdentitePath) {
+                    $documents['piece_identite'] = $pieceIdentitePath;
+                }
+
                 Prestataire::create([
                     'user_id' => $user->id,
                     'metier' => $request->input('metier', 'Non spécifié'),
                     'description' => $request->input('description'),
                     'annees_experience' => $request->input('annees_experience', 0),
                     'tarif_horaire' => $request->input('tarif_horaire'),
+                    'documents' => !empty($documents) ? $documents : null,
                     'statut_inscription' => 'en_attente', // En attente de validation admin
                     'solde' => 0,
                     'score_confiance' => 0,

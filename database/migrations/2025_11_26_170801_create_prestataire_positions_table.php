@@ -11,10 +11,18 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Vérifier que les tables existent avant de créer les foreign keys
+        if (!Schema::hasTable('prestataires')) {
+            throw new \Exception('La table prestataires doit exister avant de créer prestataire_positions');
+        }
+        if (!Schema::hasTable('commandes')) {
+            throw new \Exception('La table commandes doit exister avant de créer prestataire_positions');
+        }
+
         Schema::create('prestataire_positions', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('prestataire_id')->constrained('prestataires')->onDelete('cascade');
-            $table->foreignId('commande_id')->nullable()->constrained('commandes')->onDelete('set null');
+            $table->unsignedBigInteger('prestataire_id');
+            $table->unsignedBigInteger('commande_id')->nullable();
             $table->decimal('latitude', 10, 8);
             $table->decimal('longitude', 11, 8);
             $table->decimal('accuracy', 8, 2)->nullable(); // Précision en mètres
@@ -22,6 +30,17 @@ return new class extends Migration
             $table->decimal('heading', 5, 2)->nullable(); // Direction en degrés
             $table->timestamp('timestamp');
             $table->timestamps();
+            
+            // Ajouter les foreign keys après la création de la table
+            $table->foreign('prestataire_id')
+                ->references('id')
+                ->on('prestataires')
+                ->onDelete('cascade');
+                
+            $table->foreign('commande_id')
+                ->references('id')
+                ->on('commandes')
+                ->onDelete('set null');
             
             $table->index(['prestataire_id', 'commande_id']);
             $table->index('timestamp');
