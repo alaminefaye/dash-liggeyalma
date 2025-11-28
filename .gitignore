@@ -18,6 +18,11 @@
 /public/storage
 /storage/*.key
 /storage/pail
+/storage/app/firebase-credentials.json
+/storage/app/*-*.json
+# Firebase service account credentials
+depannema-*.json
+*-*.json
 /vendor
 Homestead.json
 Homestead.yaml

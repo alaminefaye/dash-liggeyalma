@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Commande;
 use App\Models\Client;
+use App\Services\Notifications\FCMService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
@@ -137,7 +138,7 @@ class CommandeController extends Controller
             'latitude' => $request->latitude,
             'longitude' => $request->longitude,
             'date_heure_souhaitee' => $request->date_heure_souhaitee,
-            'montant_total' => $request->montant_total,
+            'montant_total' => $request->montant_total ?? 0,
             'statut' => 'en_attente',
             'historique_statuts' => [
                 [
@@ -147,10 +148,31 @@ class CommandeController extends Controller
             ],
         ]);
 
+        // Load relationships for notification
+        $commande->load(['prestataire.user', 'client.user', 'categorieService', 'sousCategorieService']);
+
+        // Send notification to prestataire about new order
+        try {
+            $fcmService = new FCMService();
+            $prestataireUser = $commande->prestataire->user;
+            if ($prestataireUser) {
+                $fcmService->sendNewOrderNotification(
+                    $prestataireUser->id,
+                    [
+                        'id' => $commande->id,
+                        'categorie' => $commande->categorieService->nom ?? 'Service',
+                    ]
+                );
+            }
+        } catch (\Exception $e) {
+            // Log error but don't fail the request
+            \Log::error('Error sending FCM notification: ' . $e->getMessage());
+        }
+
         return response()->json([
             'success' => true,
             'message' => 'Commande créée avec succès',
-            'data' => $this->formatCommande($commande->load(['prestataire.user', 'client.user', 'categorieService', 'sousCategorieService']), 'client'),
+            'data' => $this->formatCommande($commande, 'client'),
         ], 201);
     }
 
@@ -235,10 +257,29 @@ class CommandeController extends Controller
             'historique_statuts' => $historique,
         ]);
 
+        // Load relationships
+        $commande->load(['prestataire.user', 'client.user', 'categorieService', 'sousCategorieService']);
+
+        // Send notification about status change
+        try {
+            $fcmService = new FCMService();
+            // Notify client about status change
+            if ($commande->client && $commande->client->user) {
+                $fcmService->sendOrderStatusNotification(
+                    $commande->client->user->id,
+                    $newStatus,
+                    ['id' => $commande->id]
+                );
+            }
+        } catch (\Exception $e) {
+            // Log error but don't fail the request
+            \Log::error('Error sending FCM notification: ' . $e->getMessage());
+        }
+
         return response()->json([
             'success' => true,
             'message' => 'Statut mis à jour avec succès',
-            'data' => $this->formatCommande($commande->load(['prestataire.user', 'client.user', 'categorieService', 'sousCategorieService']), $user->role),
+            'data' => $this->formatCommande($commande, $user->role),
         ]);
     }
 

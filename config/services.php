@@ -51,6 +51,15 @@ return [
         'base_url' => env('ORANGE_MONEY_BASE_URL', 'https://api.orange.com/orange-money-webpay'),
     ],
 
+    'firebase' => [
+        'project_id' => env('FIREBASE_PROJECT_ID'),
+        'credentials' => env('FIREBASE_CREDENTIALS_PATH') 
+            ? (str_starts_with(env('FIREBASE_CREDENTIALS_PATH'), '/') 
+                ? env('FIREBASE_CREDENTIALS_PATH') 
+                : storage_path(env('FIREBASE_CREDENTIALS_PATH')))
+            : storage_path('app/firebase-credentials.json'),
+    ],
+
     'mtn' => [
         'api_key' => env('MTN_API_KEY'),
         'api_secret' => env('MTN_API_SECRET'),

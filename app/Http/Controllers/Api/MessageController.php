@@ -142,6 +142,21 @@ class MessageController extends Controller
 
         $message->load(['sender', 'receiver', 'commande']);
 
+        // Send push notification to receiver
+        try {
+            $fcmService = new \App\Services\Notifications\FCMService();
+            $conversationId = min($user->id, $request->receiver_id) . '_' . max($user->id, $request->receiver_id);
+            $fcmService->sendNewMessageNotification(
+                $request->receiver_id,
+                $user->name,
+                $request->message,
+                (int) $conversationId
+            );
+        } catch (\Exception $e) {
+            // Log error but don't fail the request
+            \Log::error('Error sending FCM notification: ' . $e->getMessage());
+        }
+
         return response()->json([
             'success' => true,
             'message' => 'Message envoyé',
